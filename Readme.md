@@ -2,7 +2,7 @@
 
 This is a Wrapper class, which helps to get rid of callbacks of mysql package functions and provides a way to use them in async await (es7) syntax, Below Example uses express framework and import/export statements  
 
-Just Import **BaseDatabase** class and create a custom class which extends BaseDatabase and pass pool in super (BaseDatabase class constructor)
+Import **BaseDatabase** class from **mysql-async-wrapper** and create a custom class which extends BaseDatabase and pass pool in super (BaseDatabase class constructor)
 
 database.js
 ```javascript
@@ -12,8 +12,8 @@ import BaseDatabase from "mysql-async-wrapper"
 const pool = mysql.createPool({
     //pool configuration
 })
-class Database extends BaseDatabase{
 
+class Database extends BaseDatabase{
     constructor(){
         super(pool);
     }
@@ -22,7 +22,7 @@ class Database extends BaseDatabase{
 export default Database;
 ```
 
-now in your api controllers ( route handlers )
+now in api controllers ( route handlers )
 
 ```javascript
 import Database from "database.js";
@@ -37,12 +37,64 @@ async function controller(req, res, next){
         const empResult = await connection.executeQuery(empQuery, []);
 
         const deptQuery = `Select * from Departments`;
-        const deptResult = await db.executeQuery(deptQuery, []); 
+        const deptResult = await db.executeQuery(deptQuery, []); // directly db can also be used to execute queries
 
     }catch(err){
         next(err); 
     }finally{
         db.close(); // To Release Connection
+    }
+}
+```
+
+* To begin transaction pass transaction true in options while calling getConnection </br>
+* Incase of **error** during query executing  and connection is in transaction then it will **automatically get rollback** </br>
+* Incase of closing connection and connection is in transaction then it will **automatically get commit**
+
+```javascript
+import Database from "database.js";
+
+async function controller(req, res, next){
+    try{
+
+        const db = new Database();
+        const connetion = await db.getConnection({ transaction: true }); // Will Begin Transaction
+        
+        const empQuery = `Insert into Employees (EmpID, Name) values (?,?)`;
+        const empResult = await connection.executeQuery(empQuery, ["E02", "Abhay"]); // Incase of error auto rollback of transaction will be done
+
+        const deptQuery = `Insert into Departments (DeptID, EmpID) values (?,?)`;
+        const deptResult = await connection.executeQuery(deptQuery, ["D01", "E02"]); 
+
+    }catch(err){
+        db.rollback(); // to rollback in case of error 
+        next(err); 
+    }finally{
+        db.close(); // auto commits incase of no error and connection is in transaction 
+    }
+}
+```
+
+If Required Transaction can be begin using beginTransaction
+```javascript
+async function controller(req, res, next){
+    try{
+
+        const db = new Database();
+        const connetion = await db.getConnection(); 
+        await db.beginTransaction(); // Will Begin Transaction
+        
+        const empQuery = `Insert into Employees (EmpID, Name) values (?,?)`;
+        const empResult = await connection.executeQuery(empQuery, ["E02", "Abhay"]); 
+
+        const deptQuery = `Insert into Departments (DeptID, EmpID) values (?,?)`;
+        const deptResult = await connection.executeQuery(deptQuery, ["D01", "E02"]); 
+
+    }catch(err){
+        db.rollback(); // to rollback in case of error 
+        next(err); 
+    }finally{
+        db.close(); // auto commits incase of no error and connection is in transaction 
     }
 }
 ```
