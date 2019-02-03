@@ -1,12 +1,14 @@
 {
   "name": "mysql-async-wrapper",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.1",
   "description": "",
-  "main": "dist/base-database.js",
+  "main": "dist/index.js",
+  "types" : "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Abhay Sehgal",
+  "homepage": "https://github.com/Abhay2012/mysql-async-wrapper",
   "license": "ISC",
   "keywords": [
     "async",
