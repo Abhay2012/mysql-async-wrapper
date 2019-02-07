@@ -30,7 +30,7 @@ import Database from "database.js";
 async function controller(req, res, next){
     try{
 
-        const db = new Database();
+        var db = new Database();
         const connetion = await db.getConnection();
         
         const empQuery = `Select * from Employees`;
@@ -57,7 +57,7 @@ import Database from "database.js";
 async function controller(req, res, next){
     try{
 
-        const db = new Database();
+        var db = new Database();
         const connetion = await db.getConnection({ transaction: true }); // Will Begin Transaction
         
         const empQuery = `Insert into Employees (EmpID, Name) values (?,?)`;
@@ -80,7 +80,7 @@ If Required Transaction can be begin using beginTransaction
 async function controller(req, res, next){
     try{
 
-        const db = new Database();
+        var db = new Database();
         const connetion = await db.getConnection(); 
         await db.beginTransaction(); // Will Begin Transaction
         
