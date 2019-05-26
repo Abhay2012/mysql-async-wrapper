@@ -48,8 +48,8 @@ async function controller(req, res, next){
 ```
 
 * To begin transaction pass transaction true in options while calling getConnection </br>
-* Incase of **error** during query executing  and connection is in transaction then it will **automatically get rollback** </br>
-* Incase of closing connection and connection is in transaction then it will **automatically get commit**
+* Incase of **error** during query executing  and connection is in transaction then it will **automatically get rollback**
+* But To rollback transaction in case of errors other than query errors please use **rollback in catch block**
 
 ```javascript
 import Database from "database.js";
@@ -66,11 +66,12 @@ async function controller(req, res, next){
         const deptQuery = `Insert into Departments (DeptID, EmpID) values (?,?)`;
         const deptResult = await connection.executeQuery(deptQuery, ["D01", "E02"]); 
 
+        db.commit();
     }catch(err){
-        db.rollback(); // to rollback in case of error 
+        db.rollback(); // to rollback in case of errors other than query error
         next(err); 
     }finally{
-        db.close(); // auto commits incase of no error and connection is in transaction 
+        db.close(); 
     }
 }
 ```
@@ -90,11 +91,12 @@ async function controller(req, res, next){
         const deptQuery = `Insert into Departments (DeptID, EmpID) values (?,?)`;
         const deptResult = await connection.executeQuery(deptQuery, ["D01", "E02"]); 
 
+        db.commit();
     }catch(err){
-        db.rollback(); // to rollback in case of error 
+        db.rollback();
         next(err); 
     }finally{
-        db.close(); // auto commits incase of no error and connection is in transaction 
+        db.close(); 
     }
 }
 ```

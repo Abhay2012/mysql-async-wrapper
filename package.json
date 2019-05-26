@@ -1,6 +1,6 @@
 {
   "name": "mysql-async-wrapper",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.3",
   "description": "",
   "main": "dist/index.js",
   "types" : "dist/index.d.ts",

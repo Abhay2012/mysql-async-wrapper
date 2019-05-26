@@ -10,33 +10,37 @@
  * 
  * Incase of Error in Executing Query and connection is in transaction then it will automatically 
  * get rollback
- * 
- * Incase of closing connection and connection is in transaction then it will automatically 
- * get commit 
+ *  
  */
 
-interface IConfiguration {
+interface IConnectionConfig {
     transaction?: boolean;
 }
 
+
 class BaseDatabase {
 
-    protected pool: any = null;
-    protected connection: any = null;
-    protected inTransaction: boolean = false;
+    private _pool: any = null;
+    private _connection: any = null;
+    private _inTransaction: boolean = false;
 
     constructor(pool: any) {
-        this.pool = pool;
+        this._pool = pool;
     }
 
-    public getConnection(configuration: IConfiguration = {}) {
+    /**
+     * @description To Create Connection
+     * @param configuration Config Object, right now supports only transaction key
+     * if transaction is passed as true then connection with transaction will be created
+     */
+    public getConnection(configuration: IConnectionConfig = {}) {
         return new Promise((resolve, reject) => {
-            this.pool.getConnection(async (err: any, connection: any) => {
+            this._pool.getConnection(async (err: any, connection: any) => {
                 if (err) {
                     reject(err);
                     return;
                 }
-                this.connection = connection;
+                this._connection = connection;
                 if (configuration.transaction) {
                     try {
                         const beginTransaction = await this.beginTransaction();
@@ -53,27 +57,32 @@ class BaseDatabase {
 
     public beginTransaction() {
         return new Promise((resolve, reject) => {
-            this.connection.beginTransaction((err: Error) => {
+            this._connection.beginTransaction((err: Error) => {
                 if (err) {
                     reject(err);
                     return;
                 }
-                this.inTransaction = true;
+                this._inTransaction = true;
                 resolve();
             });
         })
     }
 
-    public executeQuery(query: string, queryParams: any) {
+    /**
+     * @description To Execute DB Query, In case of Error and Connecton in transaction auto rollback will be called
+     * @param query {required} Query String
+     * @param queryParams {optional} Query Array
+     */
+    public executeQuery(query: string, queryParams?: any) {
 
         return new Promise((resolve, reject) => {
-            if (this.connection) {
-                const queryString = this.connection.query(query, queryParams, (err: Error, result: any) => {
+            if (this._connection) {
+                const queryString = this._connection.query(query, queryParams, (err: Error, result: any) => {
 
                     // Incase of Error and Connection in transaction rollback transaction and make inTransaction to Avoid auto commit on connection close
                     if (err) {
-                        if (this.inTransaction) {
-                            this.inTransaction = false;
+                        if (this._inTransaction) {
+                            this._inTransaction = false;
                             this.rollback(() => {
                                 reject(err);
                             });
@@ -90,18 +99,19 @@ class BaseDatabase {
         });
     }
 
+    // To Commit Transaction
     public commit() {
         return new Promise((resolve, reject) => {
-            if (this.connection && this.inTransaction) {
+            if (this._connection && this._inTransaction) {
                 // In case of error in commit then rollback transaction
-                this.connection.commit((err: Error) => {
+                this._connection.commit((err: Error) => {
                     if (err) {
                         this.rollback();
                         reject(err);
                         return;
                     }
                     // after committing close transaction
-                    this.inTransaction = false;
+                    this._inTransaction = false;
                     resolve();
                 });
             } else {
@@ -110,10 +120,11 @@ class BaseDatabase {
         })
     }
 
+    // To Roll back transaction 
     public rollback(cb?: any) {
-        if (this.connection) {
-            this.inTransaction = false;
-            this.connection.rollback((err: Error) => {
+        if (this._connection && this._inTransaction) {
+            this._inTransaction = false;
+            this._connection.rollback((err: Error) => {
                 if (err) {
                     if (cb) {
                         cb(err);
@@ -131,14 +142,11 @@ class BaseDatabase {
         }
     }
 
-    public async close() {
-        if (this.connection) {
-            // If Connection is inTransaction auto commit Transaction
-            if (this.inTransaction) {
-                await this.commit();
-            }
-            this.connection.release();
-            this.connection = null;
+    // To Release Connection Back To Pool
+    public close() {
+        if (this._connection) {
+            this._connection.release();
+            this._connection = null;
         }
     }
 }
