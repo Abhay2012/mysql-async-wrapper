@@ -1,6 +1,6 @@
 {
   "name": "mysql-async-wrapper",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "description": "",
   "main": "dist/index.js",
   "types" : "dist/index.d.ts",
@@ -15,6 +15,10 @@
     "await",
     "es7",
     "mysql",
-    "express"
+    "express",
+    "retry",
+    "query",
+    "errors",
+    "deadlock"
   ]
 }
