@@ -176,7 +176,7 @@ class BaseDatabase {
 
                 // Incase of Error and Connection in transaction rollback transaction and make inTransaction to Avoid auto commit on connection close
                 if (err) {
-                    const retryCheck = retryErrorCodes.findIndex(err.code) > -1;
+                    const retryCheck = retryErrorCodes.findIndex((item) => item === err.code) > -1;
 
                     if(retryCheck && retryCount <= this._maxRetryCount){
                         try{
