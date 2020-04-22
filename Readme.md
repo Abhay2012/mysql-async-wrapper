@@ -39,7 +39,7 @@ const maxRetryCount = 3; // Number of Times To Retry
 const retryErrorCodes = ["ER_LOCK_DEADLOCK", "ERR_LOCK_WAIT_TIMEOUT"] // Retry On which Error Codes 
 
 const db = new BaseDatabase(pool, {
-    maxRetrCount,
+    maxRetryCount,
     retryErrorCodes
 })
 
